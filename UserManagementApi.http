@@ -1,0 +1,203 @@
+@UserManagementApi_HostAddress = http://localhost:5175
+@UserManagementApi_IssueDemoApiKey = issue-demo-token-secret
+@UserManagementApi_InvalidApiKey = invalid-demo-key
+@UserManagementApi_InvalidToken = invalid.token.string
+@UserManagementApi_ExpiredToken = eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJkZW1vLXVzZXIiLCJuYW1lIjoiZGVtby11c2VyIiwiaXNzIjoiVXNlck1hbmFnZW1lbnRBcGkiLCJhdWQiOiJVc2VyTWFuYWdlbWVudEFwaUNsaWVudHMiLCJleHAiOjE3NzkwNDE2ODV9.UCXPyQl8Hnxmb-Ow_O6h73x7zs_YZNqbNfzvsqO5qmg
+
+@UserManagementApi_JwtToken =eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJkZW1vLXVzZXIiLCJ1bmlxdWVfbmFtZSI6ImRlbW8tdXNlciIsIm5iZiI6MTc3OTA0NTU2MywiZXhwIjoxNzc5MDQ5MTYzLCJpYXQiOjE3NzkwNDU1NjMsImlzcyI6IlVzZXJNYW5hZ2VtZW50QXBpIiwiYXVkIjoiVXNlck1hbmFnZW1lbnRBcGlDbGllbnRzIn0.CJXRFFEzhLXJ3AnhBW5Idtbl4fHxMzFR7i0YSdmo70I
+
+### Request a JWT token
+POST {{UserManagementApi_HostAddress}}/token
+Content-Type: application/json
+
+{
+  "apiKey": "{{UserManagementApi_IssueDemoApiKey}}"
+}
+
+###
+> {%
+client.global.set("UserManagementApi_JwtToken", response.body.access_token);
+%}
+
+### Request a JWT token with invalid API key
+POST {{UserManagementApi_HostAddress}}/token
+Content-Type: application/json
+
+{
+  "apiKey": "{{UserManagementApi_InvalidApiKey}}"
+}
+
+### Unauthorized request without a token
+GET {{UserManagementApi_HostAddress}}/users
+Accept: application/json
+
+### Unauthorized request with wrong auth scheme
+GET {{UserManagementApi_HostAddress}}/users
+Authorization: Token {{UserManagementApi_JwtToken}}
+Accept: application/json
+
+### Unauthorized request with malformed token
+GET {{UserManagementApi_HostAddress}}/users
+Authorization: Bearer {{UserManagementApi_InvalidToken}}
+Accept: application/json
+
+### Unauthorized request with expired token
+GET {{UserManagementApi_HostAddress}}/users
+Authorization: Bearer {{UserManagementApi_ExpiredToken}}
+Accept: application/json
+
+### List users with valid token
+GET {{UserManagementApi_HostAddress}}/users
+Authorization: Bearer {{UserManagementApi_JwtToken}}
+Accept: application/json
+
+###
+
+### Create a valid user
+POST {{UserManagementApi_HostAddress}}/users
+Authorization: Bearer {{UserManagementApi_JwtToken}}
+Content-Type: application/json
+
+{
+  "name": "Charlie",
+  "email": "charlie@example.com"
+}
+
+###
+
+### Create with missing name
+POST {{UserManagementApi_HostAddress}}/users
+Authorization: Bearer {{UserManagementApi_JwtToken}}
+Content-Type: application/json
+
+{
+  "email": "missing-name@example.com"
+}
+
+###
+
+### Create with missing email
+POST {{UserManagementApi_HostAddress}}/users
+Authorization: Bearer {{UserManagementApi_JwtToken}}
+Content-Type: application/json
+
+{
+  "name": "No Email"
+}
+
+###
+
+### Create with empty name and email
+POST {{UserManagementApi_HostAddress}}/users
+Authorization: Bearer {{UserManagementApi_JwtToken}}
+Content-Type: application/json
+
+{
+  "name": "",
+  "email": ""
+}
+
+###
+
+### Create with whitespace-only values
+POST {{UserManagementApi_HostAddress}}/users
+Authorization: Bearer {{UserManagementApi_JwtToken}}
+Content-Type: application/json
+
+{
+  "name": "   ",
+  "email": "   "
+}
+
+###
+
+### Create with invalid email
+POST {{UserManagementApi_HostAddress}}/users
+Authorization: Bearer {{UserManagementApi_JwtToken}}
+Content-Type: application/json
+
+{
+  "name": "Invalid Email",
+  "email": "not-an-email"
+}
+
+###
+
+### Create with malicious characters
+POST {{UserManagementApi_HostAddress}}/users
+Authorization: Bearer {{UserManagementApi_JwtToken}}
+Content-Type: application/json
+
+{
+  "name": "<script>alert(1)</script>",
+  "email": "evil@example.com"
+}
+
+###
+
+### Get user by valid id
+GET {{UserManagementApi_HostAddress}}/users/3
+Authorization: Bearer {{UserManagementApi_JwtToken}}
+Accept: application/json
+
+###
+
+### Get user by nonexistent id
+GET {{UserManagementApi_HostAddress}}/users/999
+Authorization: Bearer {{UserManagementApi_JwtToken}}
+Accept: application/json
+
+###
+
+### Update user with invalid email
+PUT {{UserManagementApi_HostAddress}}/users/3
+Authorization: Bearer {{UserManagementApi_JwtToken}}
+Content-Type: application/json
+
+{
+  "name": "Charlie Updated",
+  "email": "bad-email-format"
+}
+
+###
+
+### Update user with malicious name
+PUT {{UserManagementApi_HostAddress}}/users/3
+Authorization: Bearer {{UserManagementApi_JwtToken}}
+Content-Type: application/json
+
+{
+  "name": "Robert <evil>",
+  "email": "robert@example.com"
+}
+
+###
+
+### Update nonexistent user
+PUT {{UserManagementApi_HostAddress}}/users/999
+Authorization: Bearer {{UserManagementApi_JwtToken}}
+Content-Type: application/json
+
+{
+  "name": "Ghost",
+  "email": "ghost@example.com"
+}
+
+###
+
+### Delete existing user
+DELETE {{UserManagementApi_HostAddress}}/users/3
+Authorization: Bearer {{UserManagementApi_JwtToken}}
+
+###
+
+### Delete nonexistent user
+DELETE {{UserManagementApi_HostAddress}}/users/999
+Authorization: Bearer {{UserManagementApi_JwtToken}}
+
+###
+
+### Confirm deleted user returns 404
+GET {{UserManagementApi_HostAddress}}/users/3
+Authorization: Bearer {{UserManagementApi_JwtToken}}
+Accept: application/json
